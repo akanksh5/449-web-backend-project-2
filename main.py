@@ -1,4 +1,4 @@
-from fastapi import Depends, FastAPI, HTTPException,Request,Body
+from fastapi import FastAPI, HTTPException,Request,Body
 from sqlalchemy.orm import Session
 import  models
 from database import SessionLocal, engine
@@ -49,14 +49,24 @@ async def heyman():
     return {"message": "Hello World"}
 
 @app.post("/permission")
-async def postplan(payload: Any = Body(None)):
-    permission_name = payload["permission_name"]
+async def postpermission(payload: Any = Body(None)):
+    name = payload["permission_name"]
     api_endpoint = payload["api_endpoint"]
     description = payload["description"]
-    permission = models.Permission(permission_name=permission_name, api_endpoint=api_endpoint,description=description)
+    permission = models.Permission(name=name, api_endpoint=api_endpoint,description=description)
     session.add(permission)
     session.commit()
-    return {"todo added": permission.permission_name}
+    return {"todo added": permission.name}
+
+@app.delete("/permission/{permission_id}")
+async def deletepermission(permission_id: int):
+    permission_obj = session.get(models.Permission, permission_id)
+    if not permission_obj:
+            raise HTTPException(status_code=404, detail="Permission not found")
+    session.delete(permission_obj)
+    session.commit()
+    return {"ok": True}
+
 
 
 
