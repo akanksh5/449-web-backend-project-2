@@ -1,5 +1,6 @@
 from sqlalchemy import Column, ForeignKey, Integer, String
-from database import Base
+from database import Base,Session
+
 
 
 class Subscription(Base):
@@ -8,14 +9,14 @@ class Subscription(Base):
     id = Column(Integer, index=True)
     plan = Column(String(20), primary_key=True, index=True)
     description = Column(String(20))
-    api_permissions = Column(String(30))
+    api_permissions = Column(String(30)) #['get:books','post:books']
     usage_limits = Column(Integer)
 
 class Permission(Base):
     __tablename__ = "permission"
 
     id = Column(Integer, primary_key=True, index=True)
-    permission_name = Column(String(20), index=True)
+    name = Column(String(20), index=True)
     api_endpoint = Column(String(20), index=True)
     description = Column(String(20), index=True)
 

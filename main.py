@@ -1,9 +1,13 @@
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException,Request,Body
 from sqlalchemy.orm import Session
 import  models
 from database import SessionLocal, engine
+from sqlalchemy.orm import sessionmaker
+from typing import Any
 
 models.Base.metadata.create_all(bind=engine)
+Session = sessionmaker(bind=engine)
+session = Session()
 # Dependency
 def get_db():
     db = SessionLocal()
@@ -43,5 +47,16 @@ async def heyman():
 async def heyman():
     id = 5
     return {"message": "Hello World"}
+
+@app.post("/permission")
+async def postplan(payload: Any = Body(None)):
+    permission_name = payload["permission_name"]
+    api_endpoint = payload["api_endpoint"]
+    description = payload["description"]
+    permission = models.Permission(permission_name=permission_name, api_endpoint=api_endpoint,description=description)
+    session.add(permission)
+    session.commit()
+    return {"todo added": permission.permission_name}
+
 
 
