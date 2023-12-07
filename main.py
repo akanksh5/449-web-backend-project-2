@@ -67,6 +67,18 @@ async def deletepermission(permission_id: int):
     session.commit()
     return {"ok": True}
 
+@app.put("/permission/{permission_id}")
+async def updatepermission(permission_id: int,payload: Any = Body(None)):
+    permission_obj = session.get(models.Permission, permission_id)
+    if not permission_obj:
+        raise HTTPException(status_code=404, detail="Permission not found")
+    permission_obj.name = payload["permission_name"]
+    permission_obj.api_endpoint = payload["api_endpoint"]
+    permission_obj.description = payload["description"]
+    session.add(permission_obj)
+    session.commit()
+    session.refresh(permission_obj)
+    return permission_obj
 
 
 
