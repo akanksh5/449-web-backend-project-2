@@ -1,0 +1,40 @@
+from sqlalchemy import Column, ForeignKey, Integer, String
+from database import Base
+
+
+class Subscription(Base):
+    __tablename__ = "subscription"
+
+    id = Column(Integer, index=True)
+    plan = Column(String(20), primary_key=True, index=True)
+    description = Column(String(20))
+    api_permissions = Column(String(30))
+    usage_limits = Column(Integer)
+
+class Permission(Base):
+    __tablename__ = "permission"
+
+    id = Column(Integer, primary_key=True, index=True)
+    permission_name = Column(String(20), index=True)
+    api_endpoint = Column(String(20), index=True)
+    description = Column(String(20), index=True)
+
+class User(Base):
+    __tablename__ = "user"
+
+    id = Column(Integer, primary_key=True)
+    email = Column(String(20))
+    password = Column(String(20))
+    subscription = Column(String(20),ForeignKey("subscription.plan"))
+
+
+class Tracking(Base):
+    __tablename__ = "tracking"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user = Column(Integer,ForeignKey("user.id"))
+    used = Column(Integer)
+    limit = Column(Integer)
+    ttl = Column(Integer)
+
+
