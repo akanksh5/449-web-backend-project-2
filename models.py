@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy import Column, ForeignKey, Integer, String , Boolean
 from database import Base,Session
 
 
@@ -26,6 +26,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     email = Column(String(20))
     password = Column(String(20))
+    is_admin = Column(Boolean, default=False)
     subscription = Column(String(20),ForeignKey("subscription.plan"))
 
 

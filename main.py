@@ -81,4 +81,38 @@ async def updatepermission(permission_id: int,payload: Any = Body(None)):
     return permission_obj
 
 
+@app.post("/subscribe")
+async def postsubscription(payload: Any = Body(None)):
+    plan = payload["plan"]
+    description = payload["description"]
+    api_permissions = payload["api_permissions"]
+    usage_limits = payload["usage_limits"]
+    subscription_obj= models.Subscription(plan=plan, description=description,api_permissions=api_permissions,usage_limits=usage_limits)
+    session.add(subscription_obj)
+    session.commit()
+    return {"Subscription added": subscription_obj}
+
+@app.delete("/subscribe/{subscription_id}")
+async def deletesubscription(subscription_id: int):
+    subscription_obj = session.get(models.Subscription, subscription_id)
+    if not subscription_obj:
+            raise HTTPException(status_code=404, detail="Subscription not found")
+    session.delete(subscription_obj)
+    session.commit()
+    return {"ok": True}
+
+@app.put("/subscribe/{subscription_id}")
+async def updatesubscription(subscription_id: int,payload: Any = Body(None)):
+    subscription_obj = session.get(models.Subscription, subscription_id)
+    if not subscription_obj:
+        raise HTTPException(status_code=404, detail="Subscription not found")
+    subscription_obj.plan = payload["plan"]
+    subscription_obj.description = payload["description"]
+    subscription_obj.api_permissions = payload["api_permissions"]
+    subscription_obj.usage_limits = payload["usage_limits"]
+    session.add(subscription_obj)
+    session.commit()
+    session.refresh(subscription_obj)
+    return subscription_obj
+
 
