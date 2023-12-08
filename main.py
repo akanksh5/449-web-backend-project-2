@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException,Request,Body
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session , Integer
 import  models
 from database import SessionLocal, engine
 from sqlalchemy.orm import sessionmaker
@@ -127,8 +127,8 @@ async def postsubscription(payload: Any = Body(None)):
     session.commit()
     return {"Subscription added": subscription_obj}
 
-@app.put("/subscribe")
-async def putsubscription(payload: Any = Body(None)):
+@app.put("/subscribe/{user_id}")
+async def putsubscription(user_id: int,payload: Any = Body(None)):
     subscription_id = payload["subscription_id"]
     subscription_obj = session.get(models.Subscription, subscription_id)
     user_obj = session.get(models.User,user_id)
@@ -138,5 +138,30 @@ async def putsubscription(payload: Any = Body(None)):
     session.add(user_obj)
     session.commit()
     return {"Subscription updated": subscription_obj}
+
+
+@app.get("/subscriptions/{user_id}")
+async def viewsubscriptionhandler(user_id: int):
+    user_obj = session.get(models.User,user_id)
+    subscription_obj = session.get(models.Subscription,user_obj.subscription)
+    return {
+                "user": user_id,
+                "plan name":subscription_obj.plan,
+                "limit" : subscription_obj.usage_limit,
+                "api_permissions" : subscription_obj.api_permissions,
+                "description":subscription_obj.description
+            }
+
+
+@app.get("/subscriptions/{user_id}/usage")
+async def viewsubscriptionhandler(user_id: int):
+    user_obj = session.get(models.User,user_id)
+    subscription_obj = session.get(models.Subscription,user_obj.subscription)
+    return {
+                "user": user_id,
+                "usage":user_obj.used,
+                "limit" : subscription_obj.usage_limit,
+                "description":subscription_obj.description
+            }
 
 
