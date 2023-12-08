@@ -28,15 +28,9 @@ class User(Base):
     password = Column(String(20))
     is_admin = Column(Boolean, default=False)
     subscription = Column(String(20),ForeignKey("subscription.plan"))
-
-
-class Tracking(Base):
-    __tablename__ = "tracking"
-
-    id = Column(Integer, primary_key=True, index=True)
-    user = Column(Integer,ForeignKey("user.id"))
     used = Column(Integer)
     limit = Column(Integer)
     ttl = Column(Integer)
+
 
 

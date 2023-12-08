@@ -81,8 +81,8 @@ async def updatepermission(permission_id: int,payload: Any = Body(None)):
     return permission_obj
 
 
-@app.post("/subscribe")
-async def postsubscription(payload: Any = Body(None)):
+@app.post("/plan")
+async def postplan(payload: Any = Body(None)):
     plan = payload["plan"]
     description = payload["description"]
     api_permissions = payload["api_permissions"]
@@ -92,8 +92,8 @@ async def postsubscription(payload: Any = Body(None)):
     session.commit()
     return {"Subscription added": subscription_obj}
 
-@app.delete("/subscribe/{subscription_id}")
-async def deletesubscription(subscription_id: int):
+@app.delete("/plan/{subscription_id}")
+async def deleteplan(subscription_id: int):
     subscription_obj = session.get(models.Subscription, subscription_id)
     if not subscription_obj:
             raise HTTPException(status_code=404, detail="Subscription not found")
@@ -101,8 +101,8 @@ async def deletesubscription(subscription_id: int):
     session.commit()
     return {"ok": True}
 
-@app.put("/subscribe/{subscription_id}")
-async def updatesubscription(subscription_id: int,payload: Any = Body(None)):
+@app.put("/plan/{subscription_id}")
+async def updateplan(subscription_id: int,payload: Any = Body(None)):
     subscription_obj = session.get(models.Subscription, subscription_id)
     if not subscription_obj:
         raise HTTPException(status_code=404, detail="Subscription not found")
@@ -114,5 +114,29 @@ async def updatesubscription(subscription_id: int,payload: Any = Body(None)):
     session.commit()
     session.refresh(subscription_obj)
     return subscription_obj
+
+@app.post("/subscribe")
+async def postsubscription(payload: Any = Body(None)):
+    subscription_id = payload["subscription_id"]
+    subscription_obj = session.get(models.Subscription, subscription_id)
+    user_obj = session.get(models.User,user_id)
+    user_obj.subscription = subscription_id
+    user_obj.limit - subscription_obj.usage_limit
+    user_obj.used = 0
+    session.add(user_obj)
+    session.commit()
+    return {"Subscription added": subscription_obj}
+
+@app.put("/subscribe")
+async def putsubscription(payload: Any = Body(None)):
+    subscription_id = payload["subscription_id"]
+    subscription_obj = session.get(models.Subscription, subscription_id)
+    user_obj = session.get(models.User,user_id)
+    user_obj.subscription = subscription_id
+    user_obj.limit - subscription_obj.usage_limit
+    user_obj.used = 0
+    session.add(user_obj)
+    session.commit()
+    return {"Subscription updated": subscription_obj}
 
 
