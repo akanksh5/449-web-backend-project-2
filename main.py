@@ -164,4 +164,22 @@ async def viewsubscriptionhandler(user_id: int):
                 "description":subscription_obj.description
             }
 
+@app.post("/usage/{userId}")
+async def postusage(payload: Any = Body(None)):
+    usage = payload["usage"]
+    user_obj = session.get(models.User,user_id)
+    user_obj.used=usage
+    session.add(user_obj)
+    session.commit()
+    return {"User added": subscription_obj}
+
+@app.get("/usage/{user_id}/limit")
+async def viewsubscriptionhandler(user_id: int):
+    user_obj = session.get(models.User,user_id)
+    subscription_obj = session.get(models.Subscription,user_obj.subscription)
+    return {
+                "user": user_id,
+                "limit" : subscription_obj.usage_limit
+            }
+
 
