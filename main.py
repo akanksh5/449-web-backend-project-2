@@ -1,5 +1,5 @@
 from fastapi import FastAPI, HTTPException,Request,Body
-from sqlalchemy.orm import Session , Integer
+from sqlalchemy.orm import Session
 import  models
 from database import SessionLocal, engine
 from sqlalchemy.orm import sessionmaker
@@ -19,34 +19,84 @@ def get_db():
 
 app = FastAPI()
 
-# Plan 1 -> get:api , post:api
-# users 1 -> Plan 1
-# Permission name : get:api , /thirdapi , Hi there
-
 @app.post("/firstapi")
-async def root():
-    id = 1
+async def firstapihandler():
+    # get id and role from token
+    scope = "get:firstapi"
+    user_id = "1"
+    user_obj = session.get(models.User,user_id)
+    if user_obj.used >= user_obj.limit:
+        return {"message":"Usage limits exceeded"}
+    user_obj.used += user_obj.used+1
+    session.add(permission_obj)
+    session.commit()
+    session.refresh(permission_obj)
     return {"message": "Hello World"}
 
 @app.delete("/secondapi")
 async def heyman():
-    id = 2
-    return {"message": "Hello World"}
+    scope = "get:secondapi"
+    user_id = "1"
+    user_obj = session.get(models.User,user_id)
+    if user_obj.used >= user_obj.limit:
+        return {"message":"Usage limits exceeded"}
+    user_obj.used += user_obj.used+1
+    session.add(permission_obj)
+    session.commit()
+    session.refresh(permission_obj)
+    return {"message": "Hello World"}  
 
 @app.get("/thirdapi")
 async def heyman():
-    id = 3
-    return {"message": "Hello World"}
+    scope = "get:thirdapi"
+    user_id = "1"
+    user_obj = session.get(models.User,user_id)
+    if user_obj.used >= user_obj.limit:
+        return {"message":"Usage limits exceeded"}
+    user_obj.used += user_obj.used+1
+    session.add(permission_obj)
+    session.commit()
+    session.refresh(permission_obj)
+    return {"message": "Hello World"}  
 
 @app.get("/fourthapi")
 async def heyman():
-    id = 4
-    return {"message": "Hello World"}
+    scope = "get:fourthapi"
+    user_id = "1"
+    user_obj = session.get(models.User,user_id)
+    if user_obj.used >= user_obj.limit:
+        return {"message":"Usage limits exceeded"}
+    user_obj.used += user_obj.used+1
+    session.add(permission_obj)
+    session.commit()
+    session.refresh(permission_obj)
+    return {"message": "Hello World"}  
 
 @app.get("/fifthapi")
 async def heyman():
-    id = 5
+    scope = "get:fifthapi"
+    user_id = "1"
+    user_obj = session.get(models.User,user_id)
+    if user_obj.used >= user_obj.limit:
+        return {"message":"Usage limits exceeded"}
+    user_obj.used += user_obj.used+1
+    session.add(permission_obj)
+    session.commit()
+    session.refresh(permission_obj)
     return {"message": "Hello World"}
+
+@app.get("/sixthapi")
+async def heyman():
+    scope = "get:sixthapi"
+    user_id = "1"
+    user_obj = session.get(models.User,user_id)
+    if user_obj.used >= user_obj.limit:
+        return {"message":"Usage limits exceeded"}
+    user_obj.used += user_obj.used+1
+    session.add(permission_obj)
+    session.commit()
+    session.refresh(permission_obj)
+    return {"message": "Hello World"}    
 
 @app.post("/permission")
 async def postpermission(payload: Any = Body(None)):
@@ -90,7 +140,7 @@ async def postplan(payload: Any = Body(None)):
     subscription_obj= models.Subscription(plan=plan, description=description,api_permissions=api_permissions,usage_limits=usage_limits)
     session.add(subscription_obj)
     session.commit()
-    return {"Subscription added": subscription_obj}
+    return {"Plan added": subscription_obj}
 
 @app.delete("/plan/{subscription_id}")
 async def deleteplan(subscription_id: int):
@@ -160,7 +210,7 @@ async def viewsubscriptionhandler(user_id: int):
     return {
                 "user": user_id,
                 "usage":user_obj.used,
-                "limit" : subscription_obj.usage_limit,
+                "limit" : subscription_obj.usage_limits,
                 "description":subscription_obj.description
             }
 
@@ -177,9 +227,35 @@ async def postusage(payload: Any = Body(None)):
 async def viewsubscriptionhandler(user_id: int):
     user_obj = session.get(models.User,user_id)
     subscription_obj = session.get(models.Subscription,user_obj.subscription)
+    print(user_obj)
+    print(subscription_obj)
     return {
                 "user": user_id,
-                "limit" : subscription_obj.usage_limit
+                "limit" : subscription_obj.usage_limits
             }
 
+
+@app.post("/login")
+async def postusage(payload: Any = Body(None)):
+    email = request.json.get("email", None)
+    password = request.json.get("password", None)
+    if email == None or password == None:
+        return {"msg": "username or password is missing"}
+    if obj:
+        access_token = create_access_token(identity=username)
+    #return token
+    session.commit()
+    return {"User added": subscription_obj}
+
+@app.post("/register")
+def registeruser(payload: Any = Body(None)):
+    password = payload["password"]
+    email = payload["email"]
+    is_admin=payload["is_admin"]
+    if password == None or email==None:
+        return "email or password is absent",404
+    user_obj = models.User(email=email,password=password,used=0,subscription=1,limit=20,ttl=0,is_admin=is_admin)
+    session.add(user_obj)
+    session.commit()
+    return "The user has been registered",201
 
