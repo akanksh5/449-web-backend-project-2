@@ -1,9 +1,12 @@
-from fastapi import FastAPI, HTTPException,Request,Body
+from fastapi import FastAPI, HTTPException,Request,Body,Depends
 from sqlalchemy.orm import Session
 import  models
 from database import SessionLocal, engine
 from sqlalchemy.orm import sessionmaker
 from typing import Any
+import json
+import auth
+import jwt
 
 models.Base.metadata.create_all(bind=engine)
 Session = sessionmaker(bind=engine)
@@ -20,24 +23,30 @@ def get_db():
 app = FastAPI()
 
 @app.post("/firstapi")
-async def firstapihandler():
+async def firstapihandler(token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     # get id and role from token
-    scope = "get:firstapi"
-    user_id = "1"
+    scope = "read:getfirstapi"
+    user_id = token_data.sub
     user_obj = session.get(models.User,user_id)
-    if user_obj.used >= user_obj.limit:
+    subscription_obj = session.get(models.Subscription,user_obj.subscription)
+    if scope not in json.loads(subscription_obj.api_permissions):
+        return {"message":"This API is inaccessible"}
+    if user_obj.used >= user_obj.limit: 
         return {"message":"Usage limits exceeded"}
-    user_obj.used += user_obj.used+1
-    session.add(permission_obj)
+    user_obj.used += 1
+    session.add(user_obj)
     session.commit()
-    session.refresh(permission_obj)
+    session.refresh(user_obj)
     return {"message": "Hello World"}
 
-@app.delete("/secondapi")
-async def heyman():
+@app.get("/secondapi")
+async def heyman(token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     scope = "get:secondapi"
     user_id = "1"
     user_obj = session.get(models.User,user_id)
+    subscription_obj = session.get(models.Subscription,user_obj.subscription)
+    if scope not in json.loads(subscription_obj.api_permissions):
+        return {"message":"This API is inaccessible"}
     if user_obj.used >= user_obj.limit:
         return {"message":"Usage limits exceeded"}
     user_obj.used += user_obj.used+1
@@ -47,10 +56,13 @@ async def heyman():
     return {"message": "Hello World"}  
 
 @app.get("/thirdapi")
-async def heyman():
+async def heyman(token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     scope = "get:thirdapi"
     user_id = "1"
     user_obj = session.get(models.User,user_id)
+    subscription_obj = session.get(models.Subscription,user_obj.subscription)
+    if scope not in json.loads(subscription_obj.api_permissions):
+        return {"message":"This API is inaccessible"}
     if user_obj.used >= user_obj.limit:
         return {"message":"Usage limits exceeded"}
     user_obj.used += user_obj.used+1
@@ -60,10 +72,13 @@ async def heyman():
     return {"message": "Hello World"}  
 
 @app.get("/fourthapi")
-async def heyman():
+async def heyman(token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     scope = "get:fourthapi"
     user_id = "1"
     user_obj = session.get(models.User,user_id)
+    subscription_obj = session.get(models.Subscription,user_obj.subscription)
+    if scope not in json.loads(subscription_obj.api_permissions):
+        return {"message":"This API is inaccessible"}
     if user_obj.used >= user_obj.limit:
         return {"message":"Usage limits exceeded"}
     user_obj.used += user_obj.used+1
@@ -73,10 +88,13 @@ async def heyman():
     return {"message": "Hello World"}  
 
 @app.get("/fifthapi")
-async def heyman():
+async def heyman(token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     scope = "get:fifthapi"
     user_id = "1"
     user_obj = session.get(models.User,user_id)
+    subscription_obj = session.get(models.Subscription,user_obj.subscription)
+    if scope not in json.loads(subscription_obj.api_permissions):
+        return {"message":"This API is inaccessible"}
     if user_obj.used >= user_obj.limit:
         return {"message":"Usage limits exceeded"}
     user_obj.used += user_obj.used+1
@@ -86,10 +104,13 @@ async def heyman():
     return {"message": "Hello World"}
 
 @app.get("/sixthapi")
-async def heyman():
+async def heyman(token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     scope = "get:sixthapi"
     user_id = "1"
     user_obj = session.get(models.User,user_id)
+    subscription_obj = session.get(models.Subscription,user_obj.subscription)
+    if scope not in json.loads(subscription_obj.api_permissions):
+        return {"message":"This API is inaccessible"}
     if user_obj.used >= user_obj.limit:
         return {"message":"Usage limits exceeded"}
     user_obj.used += user_obj.used+1
@@ -99,7 +120,9 @@ async def heyman():
     return {"message": "Hello World"}    
 
 @app.post("/permission")
-async def postpermission(payload: Any = Body(None)):
+async def postpermission(payload: Any = Body(None),token_data: auth.TokenPayload = Depends(auth.check_user_role)):
+    if token_data.role != "admin":
+        HTTPException(status_code=403, detail="Unauthorized")
     name = payload["permission_name"]
     api_endpoint = payload["api_endpoint"]
     description = payload["description"]
@@ -109,7 +132,9 @@ async def postpermission(payload: Any = Body(None)):
     return {"todo added": permission.name}
 
 @app.delete("/permission/{permission_id}")
-async def deletepermission(permission_id: int):
+async def deletepermission(permission_id: int,token_data: auth.TokenPayload = Depends(auth.check_user_role)):
+    if token_data.role != "admin":
+        HTTPException(status_code=403, detail="Unauthorized")
     permission_obj = session.get(models.Permission, permission_id)
     if not permission_obj:
             raise HTTPException(status_code=404, detail="Permission not found")
@@ -118,7 +143,9 @@ async def deletepermission(permission_id: int):
     return {"ok": True}
 
 @app.put("/permission/{permission_id}")
-async def updatepermission(permission_id: int,payload: Any = Body(None)):
+async def updatepermission(permission_id: int,payload: Any = Body(None),token_data: auth.TokenPayload = Depends(auth.check_user_role)):
+    if token_data.role != "admin":
+        HTTPException(status_code=403, detail="Unauthorized")
     permission_obj = session.get(models.Permission, permission_id)
     if not permission_obj:
         raise HTTPException(status_code=404, detail="Permission not found")
@@ -132,7 +159,9 @@ async def updatepermission(permission_id: int,payload: Any = Body(None)):
 
 
 @app.post("/plan")
-async def postplan(payload: Any = Body(None)):
+async def postplan(payload: Any = Body(None),token_data: auth.TokenPayload = Depends(auth.check_user_role)):
+    if token_data.role != "admin":
+        HTTPException(status_code=403, detail="Unauthorized")
     plan = payload["plan"]
     description = payload["description"]
     api_permissions = payload["api_permissions"]
@@ -143,7 +172,9 @@ async def postplan(payload: Any = Body(None)):
     return {"Plan added": subscription_obj}
 
 @app.delete("/plan/{subscription_id}")
-async def deleteplan(subscription_id: int):
+async def deleteplan(subscription_id: int,token_data: auth.TokenPayload = Depends(auth.check_user_role)):
+    if token_data.role != "admin":
+        HTTPException(status_code=403, detail="Unauthorized")
     subscription_obj = session.get(models.Subscription, subscription_id)
     if not subscription_obj:
             raise HTTPException(status_code=404, detail="Subscription not found")
@@ -152,7 +183,9 @@ async def deleteplan(subscription_id: int):
     return {"ok": True}
 
 @app.put("/plan/{subscription_id}")
-async def updateplan(subscription_id: int,payload: Any = Body(None)):
+async def updateplan(subscription_id: int,payload: Any = Body(None),token_data: auth.TokenPayload = Depends(auth.check_user_role)):
+    if token_data.role != "admin":
+        HTTPException(status_code=403, detail="Unauthorized")
     subscription_obj = session.get(models.Subscription, subscription_id)
     if not subscription_obj:
         raise HTTPException(status_code=404, detail="Subscription not found")
@@ -166,7 +199,7 @@ async def updateplan(subscription_id: int,payload: Any = Body(None)):
     return subscription_obj
 
 @app.post("/subscribe")
-async def postsubscription(payload: Any = Body(None)):
+async def postsubscription(payload: Any = Body(None),token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     subscription_id = payload["subscription_id"]
     subscription_obj = session.get(models.Subscription, subscription_id)
     user_obj = session.get(models.User,user_id)
@@ -178,7 +211,9 @@ async def postsubscription(payload: Any = Body(None)):
     return {"Subscription added": subscription_obj}
 
 @app.put("/subscribe/{user_id}")
-async def putsubscription(user_id: int,payload: Any = Body(None)):
+async def putsubscription(user_id: int,payload: Any = Body(None),token_data: auth.TokenPayload = Depends(auth.check_user_role)):
+    if token_data.role != "admin":
+        HTTPException(status_code=403, detail="Unauthorized")
     subscription_id = payload["subscription_id"]
     subscription_obj = session.get(models.Subscription, subscription_id)
     user_obj = session.get(models.User,user_id)
@@ -190,8 +225,10 @@ async def putsubscription(user_id: int,payload: Any = Body(None)):
     return {"Subscription updated": subscription_obj}
 
 
-@app.get("/subscriptions/{user_id}")
-async def viewsubscriptionhandler(user_id: int):
+@app.get("/subscribe/{user_id}")
+async def viewsubscriptionhandler(user_id: int,token_data: auth.TokenPayload = Depends(auth.check_user_role)):
+    if token_data.role != "admin":
+        HTTPException(status_code=403, detail="Unauthorized")
     user_obj = session.get(models.User,user_id)
     subscription_obj = session.get(models.Subscription,user_obj.subscription)
     return {
@@ -203,8 +240,10 @@ async def viewsubscriptionhandler(user_id: int):
             }
 
 
-@app.get("/subscriptions/{user_id}/usage")
-async def viewsubscriptionhandler(user_id: int):
+@app.get("/subscribe/{user_id}/usage")
+async def viewsubscriptionhandler(user_id: int,token_data: auth.TokenPayload = Depends(auth.check_user_role)):
+    if token_data.role != "admin":
+        HTTPException(status_code=403, detail="Unauthorized")
     user_obj = session.get(models.User,user_id)
     subscription_obj = session.get(models.Subscription,user_obj.subscription)
     return {
@@ -215,7 +254,9 @@ async def viewsubscriptionhandler(user_id: int):
             }
 
 @app.post("/usage/{userId}")
-async def postusage(payload: Any = Body(None)):
+async def postusage(payload: Any = Body(None),token_data: auth.TokenPayload = Depends(auth.check_user_role)):
+    if token_data.role != "admin":
+        HTTPException(status_code=403, detail="Unauthorized")
     usage = payload["usage"]
     user_obj = session.get(models.User,user_id)
     user_obj.used=usage
@@ -224,7 +265,9 @@ async def postusage(payload: Any = Body(None)):
     return {"User added": subscription_obj}
 
 @app.get("/usage/{user_id}/limit")
-async def viewsubscriptionhandler(user_id: int):
+async def viewsubscriptionhandler(user_id: int,token_data: auth.TokenPayload = Depends(auth.check_user_role)):
+    if token_data.role != "admin":
+        HTTPException(status_code=403, detail="Unauthorized")
     user_obj = session.get(models.User,user_id)
     subscription_obj = session.get(models.Subscription,user_obj.subscription)
     print(user_obj)
@@ -236,16 +279,29 @@ async def viewsubscriptionhandler(user_id: int):
 
 
 @app.post("/login")
-async def postusage(payload: Any = Body(None)):
-    email = request.json.get("email", None)
-    password = request.json.get("password", None)
-    if email == None or password == None:
-        return {"msg": "username or password is missing"}
-    if obj:
-        access_token = create_access_token(identity=username)
-    #return token
-    session.commit()
-    return {"User added": subscription_obj}
+async def login(payload: Any = Body(None)):
+    password = payload["password"]
+    email = payload["email"]
+    if not email or not password:
+        raise HTTPException(status_code=400, detail="Incorrect email or password")
+
+    user_obj = session.query(models.User).filter(models.User.email == email).first()
+
+    if not user_obj:
+        raise HTTPException(status_code=400, detail="Incorrect email or password")
+
+    if user_obj.password == password:
+        # Generate a JWT token
+        role = "user"
+        if user_obj.is_admin == True:
+            role = "admin"
+        access_token = jwt.encode({"sub": user_obj.id, "role": role}, "secret", algorithm="HS256")
+
+        # Return the access token and user details
+        return {"token" : access_token, 
+                "detail" : "Successfully logged in"}
+    else:
+        raise HTTPException(status_code=400, detail="Incorrect email or password")
 
 @app.post("/register")
 def registeruser(payload: Any = Body(None)):
