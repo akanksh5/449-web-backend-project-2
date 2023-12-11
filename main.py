@@ -37,12 +37,12 @@ async def firstapihandler(token_data: auth.TokenPayload = Depends(auth.check_use
     session.add(user_obj)
     session.commit()
     session.refresh(user_obj)
-    return {"message": "Hello World"}
+    return {"message": "Hello from First API"}
 
 @app.get("/secondapi")
 async def heyman(token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     scope = "get:secondapi"
-    user_id = "1"
+    user_id = token_data.sub
     user_obj = session.get(models.User,user_id)
     subscription_obj = session.get(models.Subscription,user_obj.subscription)
     if scope not in json.loads(subscription_obj.api_permissions):
@@ -53,12 +53,12 @@ async def heyman(token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     session.add(permission_obj)
     session.commit()
     session.refresh(permission_obj)
-    return {"message": "Hello World"}  
+    return {"message": "Hello from Second API"}  
 
 @app.get("/thirdapi")
 async def heyman(token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     scope = "get:thirdapi"
-    user_id = "1"
+    user_id = token_data.sub
     user_obj = session.get(models.User,user_id)
     subscription_obj = session.get(models.Subscription,user_obj.subscription)
     if scope not in json.loads(subscription_obj.api_permissions):
@@ -69,12 +69,12 @@ async def heyman(token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     session.add(permission_obj)
     session.commit()
     session.refresh(permission_obj)
-    return {"message": "Hello World"}  
+    return {"message": "Hello from Third API"}  
 
 @app.get("/fourthapi")
 async def heyman(token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     scope = "get:fourthapi"
-    user_id = "1"
+    user_id = token_data.sub
     user_obj = session.get(models.User,user_id)
     subscription_obj = session.get(models.Subscription,user_obj.subscription)
     if scope not in json.loads(subscription_obj.api_permissions):
@@ -85,12 +85,12 @@ async def heyman(token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     session.add(permission_obj)
     session.commit()
     session.refresh(permission_obj)
-    return {"message": "Hello World"}  
+    return {"message": "Hello from Fourth API"}  
 
 @app.get("/fifthapi")
 async def heyman(token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     scope = "get:fifthapi"
-    user_id = "1"
+    user_id = token_data.sub
     user_obj = session.get(models.User,user_id)
     subscription_obj = session.get(models.Subscription,user_obj.subscription)
     if scope not in json.loads(subscription_obj.api_permissions):
@@ -101,12 +101,12 @@ async def heyman(token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     session.add(permission_obj)
     session.commit()
     session.refresh(permission_obj)
-    return {"message": "Hello World"}
+    return {"message": "Hello from Fifth API"}
 
 @app.get("/sixthapi")
 async def heyman(token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     scope = "get:sixthapi"
-    user_id = "1"
+    user_id = token_data.sub
     user_obj = session.get(models.User,user_id)
     subscription_obj = session.get(models.Subscription,user_obj.subscription)
     if scope not in json.loads(subscription_obj.api_permissions):
@@ -117,7 +117,7 @@ async def heyman(token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     session.add(permission_obj)
     session.commit()
     session.refresh(permission_obj)
-    return {"message": "Hello World"}    
+    return {"message": "Hello from Sixth APIs"}    
 
 @app.post("/permission")
 async def postpermission(payload: Any = Body(None),token_data: auth.TokenPayload = Depends(auth.check_user_role)):
@@ -202,7 +202,7 @@ async def updateplan(subscription_id: int,payload: Any = Body(None),token_data: 
 async def postsubscription(payload: Any = Body(None),token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     subscription_id = payload["subscription_id"]
     subscription_obj = session.get(models.Subscription, subscription_id)
-    user_obj = session.get(models.User,user_id)
+    user_obj = session.get(models.User,token_data.sub)
     user_obj.subscription = subscription_id
     user_obj.limit - subscription_obj.usage_limit
     user_obj.used = 0
@@ -254,15 +254,15 @@ async def viewsubscriptionhandler(user_id: int,token_data: auth.TokenPayload = D
             }
 
 @app.post("/usage/{userId}")
-async def postusage(payload: Any = Body(None),token_data: auth.TokenPayload = Depends(auth.check_user_role)):
+async def postusage(userId:int,payload: Any = Body(None),token_data: auth.TokenPayload = Depends(auth.check_user_role)):
     if token_data.role != "admin":
         HTTPException(status_code=403, detail="Unauthorized")
     usage = payload["usage"]
-    user_obj = session.get(models.User,user_id)
+    user_obj = session.get(models.User,userId)
     user_obj.used=usage
     session.add(user_obj)
     session.commit()
-    return {"User added": subscription_obj}
+    return {"User's usage updated": usage}
 
 @app.get("/usage/{user_id}/limit")
 async def viewsubscriptionhandler(user_id: int,token_data: auth.TokenPayload = Depends(auth.check_user_role)):
