@@ -27,7 +27,7 @@ class User(Base):
     email = Column(String(40))
     password = Column(String(20))
     is_admin = Column(Boolean, default=False)
-    subscription = Column(Integer,ForeignKey("subscription.id"))
+    subscription = Column(Integer)
     used = Column(Integer)
     limit = Column(Integer)
     ttl = Column(Integer)
